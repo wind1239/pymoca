@@ -106,13 +106,12 @@ class AliasRelation:
 
         # Construct aliases (a set of equivalent variables)
         aliases = self.aliases(canonical_a)
+        inverted_aliases = self.aliases("-" + canonical_a)
         for v in self.aliases(canonical_b):
             if opposite_signs:
                 v = self.__toggle_sign(v)
             aliases.add(v)
-
-        # TODO: We do not have to construct a new one. There might already exist a set for the negative one.
-        inverted_aliases = OrderedSet([self.__toggle_sign(v) for v in aliases])
+            inverted_aliases.add(self.__toggle_sign(v))
 
         for v in aliases:
             self._aliases[self.__toggle_sign(v)] = inverted_aliases
