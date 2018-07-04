@@ -111,14 +111,12 @@ class AliasRelation:
                 v = self.__toggle_sign(v)
             aliases.add(v)
 
-        # Update _aliases so that keys are always positive
+        # TODO: We do not have to construct a new one. There might already exist a set for the negative one.
         inverted_aliases = OrderedSet([self.__toggle_sign(v) for v in aliases])
+
         for v in aliases:
-            if self.__is_negative(v):
-                # If v is negative, we make it positive and store the inverse alias set
-                self._aliases[self.__toggle_sign(v)] = inverted_aliases
-            else:
-                self._aliases[v] = aliases
+            self._aliases[self.__toggle_sign(v)] = inverted_aliases
+            self._aliases[v] = aliases
 
         # Update _canonical_variables with new canonical var and remove old ones
         self._canonical_variables.discard(canonical_b)
@@ -138,16 +136,10 @@ class AliasRelation:
         return True if v[0] == '-' else False
 
     def aliases(self, a):
-        if self.__is_negative(a):
-            a = self.__toggle_sign(a)
-            return OrderedSet([self.__toggle_sign(v) for v in self.aliases(a)])
+        if a in self._aliases:
+            return self._aliases[a]
         else:
-            # Instead of the dictionary's "get" method, we avoid always
-            # instatiating an OrderedSet by explicitly checking
-            if a in self._aliases:
-                return self._aliases[a]
-            else:
-                return OrderedSet([a])
+            return OrderedSet([a])
 
     def canonical_signed(self, a):
         if a in self._canonical_variables_map:
