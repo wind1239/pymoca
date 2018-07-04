@@ -93,6 +93,7 @@ class OrderedSet(MutableSet):
 class AliasRelation:
     def __init__(self):
         self._aliases = {}
+        self._canonical_variables_map = OrderedDict()
         self._canonical_variables = OrderedSet()
 
     def add(self, a, b):
@@ -120,14 +121,11 @@ class AliasRelation:
                 self._aliases[v] = aliases
 
         # Update _canonical_variables with new canonical var and remove old ones
-        self._canonical_variables.add(aliases[0])
-        for v in aliases[1:]:
-            if self.__is_negative(v):
-                v = self.__toggle_sign(v)
-            try:
-                self._canonical_variables.remove(v)
-            except KeyError:
-                pass
+        self._canonical_variables.discard(canonical_b)
+
+        for v in aliases:
+            self._canonical_variables_map[v] = (canonical_a, sign_a)
+            self._canonical_variables_map[self.__toggle_sign(v)] = (canonical_a, -sign_a)
 
     def __toggle_sign(self, v):
         if self.__is_negative(v):
@@ -152,15 +150,13 @@ class AliasRelation:
                 return OrderedSet([a])
 
     def canonical_signed(self, a):
-        if self.__is_negative(a):
-            top_alias = self.aliases(self.__toggle_sign(a))[0]
+        if a in self._canonical_variables_map:
+            return self._canonical_variables_map[a]
         else:
-            top_alias = self.aliases(a)[0]
-
-        if self.__is_negative(top_alias):
-            return top_alias[1:], 1 if self.__is_negative(a) else -1
-        else:
-            return top_alias, -1 if self.__is_negative(a) else 1
+            if self.__is_negative(a):
+                return a[1:], -1
+            else:
+                return a, 1
 
     @property
     def canonical_variables(self):
